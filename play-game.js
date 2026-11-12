@@ -78,7 +78,20 @@
       pedals.addEventListener(event,e=>e.preventDefault());
     }
     controls.querySelectorAll('[data-key]').forEach(button=>{
+      // Track each finger independently on mobile Safari.
+      button.addEventListener('touchstart',e=>{
+        e.preventDefault();
+        for(const touch of e.changedTouches) held.set('touch:'+touch.identifier,button.dataset.key);
+        drive();
+      },{passive:false});
+      for(const type of ['touchend','touchcancel']) {
+        button.addEventListener(type,e=>{
+          for(const touch of e.changedTouches) held.delete('touch:'+touch.identifier);
+          drive();
+        });
+      }
       button.onpointerdown=e=>{
+        if(e.pointerType==='touch') return;
         e.preventDefault();
         button.setPointerCapture(e.pointerId);
         held.set(e.pointerId,button.dataset.key);

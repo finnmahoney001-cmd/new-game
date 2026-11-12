@@ -258,9 +258,9 @@
         if(now<d.recoverUntil) continue;
         const boosting=now<d.boostUntil;
         const slowed=now<d.slowUntil;
-        const cap=(boosting?180:145)*(slowed?.62:1);
-        d.speed=Kart.clamp(d.speed+(input.gas?(boosting?220:125):-95)*dt,0,cap);
-        const heading=d.heading+(input.steer||0)*2.55*Math.min(1,d.speed/55)*dt;
+        const cap=(boosting?138:110)*(slowed?.62:1);
+        d.speed=Kart.clamp(d.speed+(input.gas?(boosting?170:95):-95)*dt,0,cap);
+        const heading=d.heading+(input.steer||0)*1.85*Math.min(1,d.speed/42)*dt;
         const x=d.x+Math.cos(heading)*d.speed*dt,y=d.y+Math.sin(heading)*d.speed*dt;
         const position=nearest(x,y);
         // Reset when the kart footprint crosses the edge of the asphalt.
