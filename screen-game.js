@@ -27,7 +27,7 @@
       const dx=bx-ax,dy=by-ay;
       const t=Kart.clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy),0,1);
       const distance=Math.hypot(x-ax-t*dx,y-ay-t*dy);
-      if(distance<best.distance) best={distance,progress:(i+t)/route.length,heading:Math.atan2(dy,dx)};
+      if(distance<best.distance) best={distance,progress:(i+t)/route.length,heading:Math.atan2(dy,dx),x:ax+t*dx,y:ay+t*dy};
     });
     return best;
   }
@@ -265,7 +265,8 @@
         const position=nearest(x,y);
         if(position.distance>27) {
           d.speed=0;
-          d.heading=nearest(d.x,d.y).heading;
+          const center=nearest(d.x,d.y);
+          Object.assign(d,{x:center.x,y:center.y,heading:center.heading});
           d.recoverUntil=now+450;
           Jam.sound.beep(150,100);
           continue;
