@@ -263,11 +263,12 @@
         const heading=d.heading+(input.steer||0)*2.55*Math.min(1,d.speed/55)*dt;
         const x=d.x+Math.cos(heading)*d.speed*dt,y=d.y+Math.sin(heading)*d.speed*dt;
         const position=nearest(x,y);
-        if(position.distance>27) {
+        // Reset when the kart footprint crosses the edge of the asphalt.
+        if(position.distance+7>27) {
           d.speed=0;
           const center=nearest(d.x,d.y);
           Object.assign(d,{x:center.x,y:center.y,heading:center.heading});
-          d.recoverUntil=now+450;
+          d.recoverUntil=now+650;
           Jam.sound.beep(150,100);
           continue;
         }

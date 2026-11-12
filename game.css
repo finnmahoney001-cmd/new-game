@@ -35,3 +35,4 @@ canvas{display:block;width:100%;image-rendering:pixelated;border-radius:10px}
 #controls.swapped [data-key="gas"]{grid-column:1;grid-row:1}
 #controls.swapped .steering{grid-column:2;grid-row:1}
 #steering-mode{margin-bottom:12px}
+#pedals,#pedals *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}

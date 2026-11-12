@@ -73,6 +73,10 @@
       face.color=e.target.value;preview();sendFace();
     };
     controls.querySelector('#ready').onclick=()=>{ready=!ready;sendFace();update();};
+    const pedals=controls.querySelector('#pedals');
+    for(const event of ['selectstart','contextmenu','dragstart']) {
+      pedals.addEventListener(event,e=>e.preventDefault());
+    }
     controls.querySelectorAll('[data-key]').forEach(button=>{
       button.onpointerdown=e=>{
         e.preventDefault();
