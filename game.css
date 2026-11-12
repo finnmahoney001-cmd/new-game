@@ -39,3 +39,8 @@ canvas{display:block;width:100%;image-rendering:pixelated;border-radius:10px}
 #steering-mode{margin-bottom:12px}
 #pedals,#pedals *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
 #join-panel .jp-away{opacity:1;color:#595959} .jp-kick{color:#611f21;background:#ffe5df;border:1px solid #a76a67;border-radius:6px;padding:5px 9px;cursor:pointer}
+
+.steering{width:128px;height:128px;border-radius:50%;background:#39334e;cursor:grab}
+.stick-knob{transform:translate(var(--shift,0px),var(--rise,0px))}
+#controls #pedals{grid-template-columns:1fr 1fr}
+#controls.swapped .steering{justify-self:end}

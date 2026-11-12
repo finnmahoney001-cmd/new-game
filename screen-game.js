@@ -63,7 +63,7 @@
       }
       if(type==='ability' && phase==='playing' && grid.includes(d)) activate(d);
       if (type === 'drive' && phase === 'playing' && grid.includes(d)) {
-        d.input = {gas:data.gas === true, steer:Kart.clamp(Number(data.steer)||0,-1,1)};
+        d.input = {throttle:Kart.clamp(Number(data.throttle ?? (data.gas===true?1:0))||0,-1,1), steer:Kart.clamp(Number(data.steer)||0,-1,1)};
         d.inputUntil = performance.now()+750;
       }
     }
@@ -260,8 +260,11 @@
         const boosting=now<d.boostUntil;
         const slowed=now<d.slowUntil;
         const cap=(boosting?138:110)*(slowed?.62:1);
-        d.speed=Kart.clamp(d.speed+(input.gas?(boosting?170:95):-95)*dt,0,cap);
-        const heading=d.heading+(input.steer||0)*1.85*Math.min(1,d.speed/42)*dt;
+        const throttle=input.throttle||0;
+        const target=throttle*(throttle<0?48:cap);
+        const change=(boosting?170:95)*dt;
+        d.speed+=Kart.clamp(target-d.speed,-change,change);
+        const heading=d.heading+(input.steer||0)*1.85*dt;
         const x=d.x+Math.cos(heading)*d.speed*dt,y=d.y+Math.sin(heading)*d.speed*dt;
         const position=nearest(x,y);
         // Reset when the kart footprint crosses the edge of the asphalt.
