@@ -45,6 +45,7 @@
       lineup();
     },
     onPlayerReturn(player) { sync(player); lineup(); },
+    onPlayerRemove(player) { drivers.delete(player.id); lineup(); },
     onPlayerLeave(player) {
       const d = drivers.get(player.id);
       if (d) d.input = {};

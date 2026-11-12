@@ -16,6 +16,7 @@
      const room = Jam.host({
        maxPlayers: 4,                 // 1 to 4
        onPlayerJoin(player)   {},     // player = {id, name, slot, color, role, connected}
+       onPlayerRemove(player) {},     // host freed an away player seat
        onPlayerLeave(player)  {},     // phone disconnected (may come back)
        onPlayerReturn(player) {},     // same phone came back
        onMove(player, type, data) {}  // a phone sent a move
@@ -485,7 +486,7 @@
       else if (isLocal()) note = '<div class="jp-note">Running on this computer, so real phones can\'t open this address yet. The QR code works after you deploy. For now, use test phones.</div>';
       var players = api.players();
       var list = players.map(function (p) {
-        return '<li style="--c:' + p.color + '" class="' + (p.connected ? "" : "jp-away") + '"><span class="jp-dot"></span>P' + p.slot + " " + esc(p.name) + (p.connected ? "" : " (away)") + "</li>";
+        return '<li style="--c:' + p.color + '" class="' + (p.connected ? "" : "jp-away") + '"><span class="jp-dot"></span>P' + p.slot + " " + esc(p.name) + (p.connected ? "" : " (away)") + (p.role === "player" && !p.connected ? ' <button class="jp-kick" type="button">Kick</button>' : "") + "</li>";
       }).join("");
       for (var s = players.length; s < maxPlayers; s++) list += '<li class="jp-empty"><span class="jp-dot"></span>waiting...</li>';
       var nSpec = api.spectators().length;
@@ -500,6 +501,18 @@
           '<button class="jp-test" id="add-test-phone" type="button">+ Add a test phone</button>' +
           note +
         "</div>";
+      var away = players.filter(function (p) { return !p.connected; });
+      panel.querySelectorAll(".jp-kick").forEach(function (button, i) {
+        button.onclick = function () {
+          var player = roster[away[i].id];
+          if (!player || player.connected || player.role !== "player") return;
+          delete roster[player.id];
+          saveRoster();
+          rawSend({ k: "roster", players: api.players(), spectators: api.spectators().length });
+          renderPanel();
+          call(opts.onPlayerRemove, clean(player));
+        };
+      });
       $("add-test-phone").onclick = function () { window.open(url + "&test=" + Date.now().toString(36), "_blank"); };
     }
 
