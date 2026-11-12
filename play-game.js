@@ -20,7 +20,7 @@
       if(type!=='phase' || !controls.querySelector('#editor')) return;
       const changed=phase!==data.name || round!==data.round;
       phase=data.name;round=data.round;
-      if(changed) {held.clear();cooldownUntil=performance.now()+(data.cooldown||0);}
+      if(changed) {held.clear();showStick();cooldownUntil=performance.now()+(data.cooldown||0);}
       if(data.ability && (changed || phase!=='lobby')) ability=data.ability;
       if(phase==='lobby' && changed) {
         ready=!!data.ready;
@@ -28,25 +28,30 @@
       }
       update();
     },
-    onScreenLost() {held.clear();controls.querySelector('#status')?.replaceChildren('Waiting for the race screen…');}
+    onScreenLost() {held.clear();showStick();controls.querySelector('#status')?.replaceChildren('Waiting for the race screen…');}
   });
   function sendFace() {me.send('driver',{round,face,ready,ability});}
   function drive() {
+    showStick();
     if(phase!=='playing') return;
     const values=[...held.values()];
-    me.send('drive',{round,gas:values.includes('gas'),steer:Number(values.includes('right'))-Number(values.includes('left'))});
+    me.send('drive',{round,gas:values.includes('gas'),steer:values.find(value=>typeof value==='number') ?? (Number(values.includes('right'))-Number(values.includes('left')))});
+  }
+  function showStick() {
+    const value=[...held.values()].find(value=>typeof value==='number') ?? 0;
+    controls.querySelector('.stick-knob')?.style.setProperty('--shift',value*36+'px');
   }
   function build() {
     controls.innerHTML='<p id="status"></p><button id="steering-mode" type="button">Swap sides</button><section id="editor"><svg id="face" viewBox="0 0 100 100" aria-label="Drag eight points to shape your driver"></svg>'+
       '<label class="paint">Face color <input id="paint" type="color"></label><label>Ability <select id="ability-choice"></select></label><p id="ability-description"></p><button id="ready">Ready</button></section>'+
-      '<div id="pedals" hidden><div class="steering"><button data-key="left" aria-label="Steer left">◀</button><button data-key="right" aria-label="Steer right">▶</button></div><button data-key="gas">GAS</button><button id="ability-use" type="button"></button></div>';
+      '<div id="pedals" hidden><div class="steering" aria-label="Drag horizontally to steer"><span class="stick-rail"></span><span class="stick-knob">↔</span></div><button data-key="gas">GAS</button><button id="ability-use" type="button"></button></div>';
     const choice=controls.querySelector('#ability-choice');
     for(const [id,entry] of Object.entries(Kart.abilities)) choice.add(new Option(entry.name,id));
     choice.onchange=()=>{ability=choice.value;sendFace();update();};
     controls.querySelector('#ability-use').onclick=useAbility;
     controls.querySelector('#steering-mode').onclick=()=>{
       swapped=!swapped;
-      held.clear();
+      held.clear();showStick();
       drive();
       showLayout();
       try { localStorage.setItem('face-circuit-swap',String(swapped)); } catch {}
@@ -77,11 +82,33 @@
     for(const event of ['selectstart','contextmenu','dragstart']) {
       pedals.addEventListener(event,e=>e.preventDefault());
     }
-    controls.querySelectorAll('[data-key]').forEach(button=>{
+    controls.querySelectorAll('[data-key],.steering').forEach(button=>{
+      const isStick=button.classList.contains('steering');
+      const steerAt=x=>{
+        const bounds=button.getBoundingClientRect();
+        const amount=Kart.clamp((x-bounds.left-bounds.width/2)/36,-1,1);
+        return Math.abs(amount)<.12?0:amount;
+      };
+      const setInput=(id,x)=>held.set(id,isStick?steerAt(x):'gas');
+      if(isStick) {
+        button.addEventListener('touchmove',e=>{
+          e.preventDefault();
+          for(const touch of e.changedTouches) {
+            const id='touch:'+touch.identifier;
+            if(held.has(id)) setInput(id,touch.clientX);
+          }
+          drive();
+        },{passive:false});
+        button.onpointermove=e=>{
+          if(!held.has(e.pointerId)) return;
+          setInput(e.pointerId,e.clientX);
+          drive();
+        };
+      }
       // Track each finger independently on mobile Safari.
       button.addEventListener('touchstart',e=>{
         e.preventDefault();
-        for(const touch of e.changedTouches) held.set('touch:'+touch.identifier,button.dataset.key);
+        for(const touch of e.changedTouches) setInput('touch:'+touch.identifier,touch.clientX);
         drive();
       },{passive:false});
       for(const type of ['touchend','touchcancel']) {
@@ -94,7 +121,7 @@
         if(e.pointerType==='touch') return;
         e.preventDefault();
         button.setPointerCapture(e.pointerId);
-        held.set(e.pointerId,button.dataset.key);
+        setInput(e.pointerId,e.clientX);
         drive();
       };
       button.onpointerup=button.onpointercancel=button.onlostpointercapture=e=>{
@@ -110,7 +137,7 @@
   function update() {
     controls.querySelector('#status').textContent={
       lobby:ready?'Ready for the race':'Drag the eight points to shape your driver.',
-      countdown:'Get ready…',playing:'Hold GAS and steer through each bend.',over:'Race over. See the big screen.'
+      countdown:'Get ready…',playing:'Hold GAS and drag the stick left or right.',over:'Race over. See the big screen.'
     }[phase];
     controls.querySelector('#editor').hidden=phase!=='lobby';
     controls.querySelector('#pedals').hidden=phase!=='playing';
@@ -142,7 +169,7 @@
     if(phase==='playing' && keys[e.key]) {e.preventDefault();if(!e.repeat){held.set(e.key,keys[e.key]);drive();}}
   });
   window.addEventListener('keyup',e=>{if(held.delete(e.key)) drive();});
-  window.addEventListener('blur',()=>{held.clear();drive();});
+  window.addEventListener('blur',()=>{held.clear();showStick();drive();});
   setInterval(()=>{if(held.size) drive();},240);
 })();
 
