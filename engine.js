@@ -466,7 +466,7 @@
     function playUrl() {
       var base = location.href.split("#")[0].split("?")[0];
       base = base.substring(0, base.lastIndexOf("/") + 1);
-      return base + "play.html?room=" + code + (isPractice() ? "&practice=1" : "");
+      return base + "play.html?controller=thumbstick&room=" + code + (isPractice() ? "&practice=1" : "");
     }
     function renderPanel() {
       var panel = $("join-panel");
