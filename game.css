@@ -1,0 +1,30 @@
+:root{color-scheme:dark;font-family:system-ui,sans-serif;color:#fff4db}
+body{background:#181724;color:#fff4db}
+[hidden]{display:none!important}
+#stage{max-width:980px;margin:auto}
+.mast{border-bottom:2px solid #6c6178;margin-bottom:16px;padding-bottom:12px}
+.mast span{font:700 .8rem monospace;letter-spacing:.18em;color:#f99d75}
+.mast h1{font-size:clamp(2.5rem,7vw,5rem);line-height:1;margin:5px 0;letter-spacing:-.07em}
+#prep,#race,#editor{padding:16px;background:#262337;border:1px solid #51495f;border-radius:16px}
+#prep h2{margin-top:0}
+#lineup{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin:18px 0}
+#lineup article{display:grid;text-align:center;padding:12px;background:#342e46;border-radius:12px}
+#lineup svg{width:100%;max-width:120px;margin:auto}
+#lineup span{color:#f99d75}
+#stage button,#controls button{min-height:64px;padding:10px 22px;border:0;border-radius:10px;background:#ffbd75;color:#211a2c;font-weight:900;font-size:1.15rem;cursor:pointer}
+#stage button:disabled{opacity:.45;cursor:default}
+.board{position:relative}
+canvas{display:block;width:100%;image-rendering:pixelated;border-radius:10px}
+#signal{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(2.3rem,8vw,6rem);font-weight:1000;color:#ffbd75;text-shadow:4px 4px #241c32;pointer-events:none}
+#standings{padding:14px 0;font:700 clamp(.8rem,2.2vw,1.2rem) monospace}
+#editor{display:grid;gap:12px}
+#face{width:min(100%,310px);margin:auto;display:block;background:#c8b5db;border-radius:14px;touch-action:none}
+#face circle{cursor:grab}
+.paint{display:flex;justify-content:space-between;align-items:center;min-height:64px}
+#paint{width:75px;height:60px}
+#pedals{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px}
+#controls #pedals button{min-height:100px;touch-action:none;user-select:none;padding:6px}
+#controls #pedals button:active{background:#a7e4c6}
+#join-panel .jp-test{background:#ffbd75;color:#211a2c;border:1px solid #795533;min-height:44px;font-weight:800}
+#controls #ability-use{grid-column:1/-1;min-height:64px;background:#a7e4c6} #controls #ability-use:disabled{opacity:.55} #ability-choice{min-height:48px;font:inherit;margin-left:8px} #ability-description{margin:0}
+#controls.tilt-mode #pedals{grid-template-columns:1fr} #controls.tilt-mode [data-key="left"],#controls.tilt-mode [data-key="right"]{display:none} #tilt-status{min-height:1.3em}

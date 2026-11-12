@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game Screen</title>
+  <link rel="stylesheet" href="engine.css">
+  <link rel="stylesheet" href="game.css">
+</head>
+<body class="screen">
+
+  <!-- The join panel (QR code, room code, players). The engine fills it in.
+       Keep this element. Move it or hide it with room.showJoin(false). -->
+  <div id="join-panel"></div>
+
+  <!-- YOUR GAME'S SCREEN. Everything the room watches goes in here.
+       screen-game.js draws into it. Change freely. -->
+  <main id="stage"></main>
+
+  <!-- Script order matters. Keep these five lines in this order. -->
+  <script src="lib/supabase.js"></script>
+  <script src="lib/qrcode.js"></script>
+  <script src="config.js"></script>
+  <script src="engine.js"></script>
+  <script src="kart.js"></script>
+  <script src="screen-game.js"></script>
+</body>
+</html>
+
