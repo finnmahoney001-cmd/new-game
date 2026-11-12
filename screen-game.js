@@ -3,7 +3,7 @@
   stage.innerHTML = '<header class="mast"><span>ARCADE RACING</span><h1>Face Circuit</h1></header>' +
     '<section id="prep"><h2>Driver lineup</h2><p>Open a test phone, shape your driver and tap Ready.</p><div id="lineup"></div><button id="start">Start race</button></section>' +
     '<section id="race" hidden><div class="board"><canvas width="480" height="270" aria-label="Split-screen chase views of Clover Circuit"></canvas><div id="signal"></div></div>' +
-    '<div id="standings"></div><button id="again" hidden>Back to prep</button></section>';
+    '<div id="standings"></div></section><section id="results" hidden><h2>Race results</h2><table><thead><tr><th>Place</th><th>Driver</th><th>Time</th></tr></thead><tbody></tbody></table><button id="again" hidden>Back to prep</button></section>';
   const get = id => document.getElementById(id);
   const canvas = stage.querySelector('canvas');
   const ctx = canvas.getContext('2d');
@@ -118,11 +118,12 @@
     room.showJoin(false);
     get('prep').hidden = true;
     get('race').hidden = false;
-    get('again').hidden = true;
+    get('results').hidden = true;
     setPhase('countdown');
   };
   get('again').onclick = () => {
     drivers.forEach(d=>{d.ready=false;});
+    get('results').hidden=true;
     get('race').hidden=true;
     get('prep').hidden=false;
     room.showJoin(true);
@@ -242,6 +243,7 @@
     const width=canvas.width/columns,height=canvas.height/rows;
     grid.forEach((driver,i)=>renderView(driver,i%columns*width,Math.floor(i/columns)*height,width-2,height-2));
   }
+  const orderedDrivers=()=>[...grid].sort((a,b)=>(a.finished||Infinity)-(b.finished||Infinity) || b.total-a.total);
   function tick(now) {
     const dt = Math.min(.06,(now-previous)/1000);
     previous = now;
@@ -267,8 +269,8 @@
         const heading=d.heading+(input.steer||0)*1.85*dt;
         const x=d.x+Math.cos(heading)*d.speed*dt,y=d.y+Math.sin(heading)*d.speed*dt;
         const position=nearest(x,y);
-        // Reset when the kart footprint crosses the edge of the asphalt.
-        if(position.distance+7>27) {
+        // The outer edge of the dashed curb is 31 units from the centerline.
+        if(position.distance>31) {
           d.speed=0;
           const center=nearest(d.x,d.y);
           Object.assign(d,{x:center.x,y:center.y,heading:center.heading});
@@ -294,14 +296,25 @@
       }
       if (grid.every(d=>d.finished) || (finishAt && now-finishAt>12000) || now-startAt>90000) {
         setPhase('over');
+        get('race').hidden=true;
+        get('results').hidden=false;
         get('again').hidden=false;
+        const rows=orderedDrivers().map((d,i)=>{
+          const row=document.createElement('tr');
+          const ms=Math.max(0,Math.round(d.finished-startAt));
+          const time=Math.floor(ms/60000)+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')+'.'+String(ms%1000).padStart(3,'0');
+          for(const text of [d.finished?String(i+1):'—',d.player.name+' (P'+d.player.slot+')',d.finished?time:'DNF']) {
+            row.insertCell().textContent=text;
+          }
+          return row;
+        });
+        get('results').querySelector('tbody').replaceChildren(...rows);
       }
     }
-    if (phase !== 'lobby') {
+    if (phase === 'playing' || phase === 'countdown') {
       render();
-      const ordered = [...grid].sort((a,b)=>(a.finished||Infinity)-(b.finished||Infinity) || b.total-a.total);
+      const ordered = orderedDrivers();
       get('standings').textContent=ordered.map((d,i)=>(i+1)+'. P'+d.player.slot+'  '+(d.finished?'FINISHED':'LAP '+Math.min(laps,d.lap+1)+'/'+laps)).join('   /   ');
-      if (phase==='over') get('signal').textContent=ordered[0]?.finished?'P'+ordered[0].player.slot+' WINS':'TIME UP';
     }
     requestAnimationFrame(tick);
   }

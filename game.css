@@ -44,3 +44,5 @@ canvas{display:block;width:100%;image-rendering:pixelated;border-radius:10px}
 .stick-knob{transform:translate(var(--shift,0px),var(--rise,0px))}
 #controls #pedals{grid-template-columns:1fr 1fr}
 #controls.swapped .steering{justify-self:end}
+
+#results{background:#262337;border:1px solid #51495f;border-radius:16px;padding:20px} #results table{width:100%;border-collapse:collapse;margin:16px 0;font-variant-numeric:tabular-nums} #results th,#results td{text-align:left;padding:12px;border-bottom:1px solid #51495f}
