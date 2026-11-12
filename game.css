@@ -27,4 +27,11 @@ canvas{display:block;width:100%;image-rendering:pixelated;border-radius:10px}
 #controls #pedals button:active{background:#a7e4c6}
 #join-panel .jp-test{background:#ffbd75;color:#211a2c;border:1px solid #795533;min-height:44px;font-weight:800}
 #controls #ability-use{grid-column:1/-1;min-height:64px;background:#a7e4c6} #controls #ability-use:disabled{opacity:.55} #ability-choice{min-height:48px;font:inherit;margin-left:8px} #ability-description{margin:0}
-#controls.tilt-mode #pedals{grid-template-columns:1fr} #controls.tilt-mode [data-key="left"],#controls.tilt-mode [data-key="right"]{display:none} #tilt-status{min-height:1.3em}
+
+
+#pedals{grid-template-columns:1.35fr 1fr;gap:14px}
+.steering{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#controls.swapped #pedals{grid-template-columns:1fr 1.35fr}
+#controls.swapped [data-key="gas"]{grid-column:1;grid-row:1}
+#controls.swapped .steering{grid-column:2;grid-row:1}
+#steering-mode{margin-bottom:12px}

@@ -3,50 +3,12 @@
   let phase='lobby', round=0, face=Kart.face(null,'#ff8c6e'), ready=false, drag=null;
   let ability="pulse", cooldownUntil=0;
   const held=new Map();
-  let tilt=false, neutral=null, steer=0, tiltTimer;
-  function tiltStatus(message) {
-    controls.querySelector('#tilt-status').textContent=message;
+  let swapped=false;
+  try { swapped=localStorage.getItem('face-circuit-swap')==='true'; } catch {}
+  function showLayout() {
+    controls.classList.toggle('swapped',swapped);
+    controls.querySelector('#steering-mode').textContent=swapped?'Swap sides · Gas on left':'Swap sides · Gas on right';
   }
-  function setTilt(enabled) {
-    tilt=enabled;
-    neutral=null;
-    steer=0;
-    clearTimeout(tiltTimer);
-    held.clear();
-    controls.classList.toggle('tilt-mode',tilt);
-    controls.querySelector('#steering-mode').textContent=tilt?'Use buttons':'Use tilt';
-    drive();
-  }
-  async function toggleTilt() {
-    if(tilt) {setTilt(false);tiltStatus('Button steering');return;}
-    if(!window.isSecureContext || !window.DeviceOrientationEvent) {
-      tiltStatus('Tilt needs a supported phone browser and an HTTPS link.');
-      return;
-    }
-    try {
-      if(typeof DeviceOrientationEvent.requestPermission==='function' &&
-         await DeviceOrientationEvent.requestPermission()!=='granted') {
-        tiltStatus('Motion access was denied. You can still use the buttons.');
-        return;
-      }
-      setTilt(true);
-      tiltStatus('Hold your phone in a comfortable position to calibrate.');
-      tiltTimer=setTimeout(()=>{
-        if(neutral===null) {setTilt(false);tiltStatus('No motion signal. Button steering is active.');}
-      },2500);
-    } catch {
-      tiltStatus('Motion access is unavailable. Button steering is active.');
-    }
-  }
-  window.addEventListener('deviceorientation',event=>{
-    if(!tilt || !Number.isFinite(event.gamma)) return;
-    if(neutral===null) {
-      neutral=event.gamma;
-      tiltStatus('Tilt left or right to steer.');
-    }
-    const difference=event.gamma-neutral;
-    steer=Math.abs(difference)<4?0:Kart.clamp(difference/25,-1,1);
-  });
   const me=Jam.join({
     onReady(player) {
       if(player.role!=='player') {controls.textContent='Spectating. Watch the big screen.';return;}
@@ -72,17 +34,24 @@
   function drive() {
     if(phase!=='playing') return;
     const values=[...held.values()];
-    me.send('drive',{round,gas:values.includes('gas'),steer:tilt?steer:Number(values.includes('right'))-Number(values.includes('left'))});
+    me.send('drive',{round,gas:values.includes('gas'),steer:Number(values.includes('right'))-Number(values.includes('left'))});
   }
   function build() {
-    controls.innerHTML='<p id="status"></p><button id="steering-mode" type="button">Use tilt</button><p id="tilt-status" aria-live="polite"></p><section id="editor"><svg id="face" viewBox="0 0 100 100" aria-label="Drag eight points to shape your driver"></svg>'+
+    controls.innerHTML='<p id="status"></p><button id="steering-mode" type="button">Swap sides</button><section id="editor"><svg id="face" viewBox="0 0 100 100" aria-label="Drag eight points to shape your driver"></svg>'+
       '<label class="paint">Face color <input id="paint" type="color"></label><label>Ability <select id="ability-choice"></select></label><p id="ability-description"></p><button id="ready">Ready</button></section>'+
-      '<div id="pedals" hidden><button data-key="left" aria-label="Steer left">◀</button><button data-key="gas">GAS</button><button data-key="right" aria-label="Steer right">▶</button><button id="ability-use" type="button"></button></div>';
-    controls.querySelector('#steering-mode').onclick=toggleTilt;
+      '<div id="pedals" hidden><div class="steering"><button data-key="left" aria-label="Steer left">◀</button><button data-key="right" aria-label="Steer right">▶</button></div><button data-key="gas">GAS</button><button id="ability-use" type="button"></button></div>';
     const choice=controls.querySelector('#ability-choice');
     for(const [id,entry] of Object.entries(Kart.abilities)) choice.add(new Option(entry.name,id));
     choice.onchange=()=>{ability=choice.value;sendFace();update();};
     controls.querySelector('#ability-use').onclick=useAbility;
+    controls.querySelector('#steering-mode').onclick=()=>{
+      swapped=!swapped;
+      held.clear();
+      drive();
+      showLayout();
+      try { localStorage.setItem('face-circuit-swap',String(swapped)); } catch {}
+    };
+    showLayout();
     const svg=controls.querySelector('#face');
     svg.onpointerdown=e=>{
       const handle=e.target.closest('[data-point]');
@@ -157,6 +126,6 @@
   });
   window.addEventListener('keyup',e=>{if(held.delete(e.key)) drive();});
   window.addEventListener('blur',()=>{held.clear();drive();});
-  setInterval(()=>{if(held.size || tilt) drive();},240);
+  setInterval(()=>{if(held.size) drive();},240);
 })();
 
