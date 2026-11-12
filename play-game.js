@@ -2,6 +2,13 @@
   const controls = document.querySelector('#controls');
   let phase='lobby', round=0, face=Kart.face(null,'#ff8c6e'), ready=false, drag=null;
   let ability="pulse", cooldownUntil=0;
+  const presets={
+    Round:[[50,8],[80,16],[94,43],[87,72],[65,91],[32,91],[10,73],[7,39]],
+    Square:[[41,20],[85,20],[90,43],[90,76],[65,85],[25,85],[7,77],[7,33]],
+    Tall:[[50,5],[67,10],[79,39],[74,74],[58,94],[38,94],[24,73],[22,39]],
+    Wide:[[50,22],[84,27],[98,44],[92,61],[68,76],[29,76],[5,61],[3,41]]
+  };
+  let headShape='Round', customPoints=face.points;
   const held=new Map();
   let swapped=false;
   try { swapped=localStorage.getItem('face-circuit-swap')==='true'; } catch {}
@@ -12,7 +19,7 @@
   const me=Jam.join({
     onReady(player) {
       if(player.role!=='player') {controls.textContent='Spectating. Watch the big screen.';return;}
-      face=Kart.face(null,player.color);
+      face=Kart.face({points:presets.Round},player.color);
       build();
     },
     onMessage(type,data) {
@@ -46,7 +53,7 @@
     knob?.style.setProperty('--rise',-value.y*36+'px');
   }
   function build() {
-    controls.innerHTML='<p id="status"></p><button id="steering-mode" type="button">Swap sides</button><section id="editor"><svg id="face" viewBox="0 0 100 100" aria-label="Drag eight points to shape your driver"></svg>'+
+    controls.innerHTML='<p id="status"></p><button id="steering-mode" type="button">Swap sides</button><section id="editor"><label>Head shape <select id="head-shape"><option>Round</option><option>Square</option><option>Tall</option><option>Wide</option><option>Make your own</option></select></label><svg id="face" viewBox="0 0 100 100" aria-label="Drag eight points to shape your driver"></svg>'+
       '<label class="paint">Face color <input id="paint" type="color"></label><label>Ability <select id="ability-choice"></select></label><p id="ability-description"></p><button id="ready">Ready</button></section>'+
       '<div id="pedals" hidden><div class="steering" aria-label="Driving joystick"><span class="stick-knob"></span></div><button id="ability-use" type="button"></button></div>';
     const choice=controls.querySelector('#ability-choice');
@@ -61,10 +68,18 @@
       try { localStorage.setItem('face-circuit-swap',String(swapped)); } catch {}
     };
     showLayout();
+    const shape=controls.querySelector('#head-shape');
+    shape.onchange=()=>{
+      if(headShape==='Make your own') customPoints=face.points;
+      headShape=shape.value;
+      face=Kart.face({color:face.color,points:presets[headShape]||customPoints},face.color);
+      sendFace();
+      update();
+    };
     const svg=controls.querySelector('#face');
     svg.onpointerdown=e=>{
       const handle=e.target.closest('[data-point]');
-      if(!handle || ready || drag) return;
+      if(!handle || ready || drag || headShape!=='Make your own') return;
       drag={index:Number(handle.dataset.point),id:e.pointerId};
       svg.setPointerCapture(e.pointerId);
     };
@@ -136,18 +151,19 @@
     update();
   }
   function preview() {
-    controls.querySelector('#face').innerHTML=Kart.avatar(face)+face.points.map(([x,y],i)=>
-      '<circle data-point="'+i+'" cx="'+x+'" cy="'+y+'" r="5" fill="#fff4db" stroke="#292436" stroke-width="1.6"/>').join('');
+    controls.querySelector('#face').innerHTML=Kart.avatar(face)+(headShape==='Make your own'?face.points.map(([x,y],i)=>
+      '<circle data-point="'+i+'" cx="'+x+'" cy="'+y+'" r="5" fill="#fff4db" stroke="#292436" stroke-width="1.6"/>').join(''):'');
   }
   function update() {
     controls.querySelector('#status').textContent={
-      lobby:ready?'Ready for the race':'Drag the eight points to shape your driver.',
+      lobby:ready?'Ready for the race':headShape==='Make your own'?'Drag the eight points to shape your driver.':'Choose a head shape and color.',
       countdown:'Get ready…',playing:'Drag up to drive, down to reverse, and sideways to steer.',over:'Race over. See the big screen.'
     }[phase];
     controls.querySelector('#editor').hidden=phase!=='lobby';
     controls.querySelector('#pedals').hidden=phase!=='playing';
     controls.querySelector('#paint').value=face.color;
     controls.querySelector('#paint').disabled=ready;
+    controls.querySelector('#head-shape').disabled=ready;
     controls.querySelector('#ready').textContent=ready?'Edit driver':'Ready';
     const choice=controls.querySelector('#ability-choice');
     choice.value=ability;
